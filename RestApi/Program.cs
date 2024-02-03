@@ -4,7 +4,6 @@ using Claims.Auditing;
 using Claims.Controllers;
 using Microsoft.EntityFrameworkCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,14 +13,15 @@ builder.Services.AddControllers().AddJsonOptions(x =>
     }
 );
 
-builder.Services.AddSingleton(
-    InitializeCosmosClientInstanceAsync(builder.Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
-
-builder.Services.AddDbContext<AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//builder.Services.AddOptions();
+//builder.Services.Configure<SchedulerAppSettings>(Configuration.GetSection(nameof(SchedulerAppSettings)));
+
+builder.Services.AddSingleton(InitializeCosmosClientInstanceAsync(builder.Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
+builder.Services.AddDbContext<AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
@@ -33,9 +33,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
@@ -60,4 +58,7 @@ static async Task<CosmosDbService> InitializeCosmosClientInstanceAsync(IConfigur
     return cosmosDbService;
 }
 
-public partial class Program { }
+namespace Claims.RestApi
+{
+    public partial class Program { }
+}

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Persistance\Abstractions\Claims.Persistance.Abstractions.csproj" />
+    <ProjectReference Include="..\Abstractions\Claims.Business.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
