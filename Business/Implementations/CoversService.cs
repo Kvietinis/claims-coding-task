@@ -17,12 +17,19 @@ namespace Claims.Business.Implementations
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Create(CoverDto claim)
+        public async Task<CoverDto> Create(CoverDto claim)
         {
             var repository = _unitOfWork.GetCovers();
             var entity = ToEntity(claim);
 
+            entity.Id = Guid.NewGuid().ToString();
+            entity.Premium = ComputePremium(entity.StartDate, entity.EndDate, entity.Type);
+
             await repository.Create(entity).ConfigureAwait(false);
+
+            var result = ToDto(entity);
+
+            return result;
         }
 
         public async Task Delete(string id)
@@ -48,6 +55,58 @@ namespace Claims.Business.Implementations
             var result = ToDto(entity);
 
             return result;
+        }
+
+        public decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)
+        {
+            var multiplier = 1.3m;
+
+            if (coverType == CoverType.Yacht)
+            {
+                multiplier = 1.1m;
+            }
+
+            if (coverType == CoverType.PassengerShip)
+            {
+                multiplier = 1.2m;
+            }
+
+            if (coverType == CoverType.Tanker)
+            {
+                multiplier = 1.5m;
+            }
+
+            var premiumPerDay = 1250 * multiplier;
+            var insuranceLength = endDate.DayNumber - startDate.DayNumber;
+            var totalPremium = 0m;
+
+            for (var i = 0; i < insuranceLength; i++)
+            {
+                if (i < 30)
+                {
+                    totalPremium += premiumPerDay;
+                }
+
+                if (i < 180 && coverType == CoverType.Yacht)
+                {
+                    totalPremium += premiumPerDay - premiumPerDay * 0.05m;
+                }
+                else if (i < 180)
+                {
+                    totalPremium += premiumPerDay - premiumPerDay * 0.02m;
+                }
+
+                if (i < 365 && coverType != CoverType.Yacht)
+                {
+                    totalPremium += premiumPerDay - premiumPerDay * 0.03m;
+                }
+                else if (i < 365)
+                {
+                    totalPremium += premiumPerDay - premiumPerDay * 0.08m;
+                }
+            }
+
+            return totalPremium;
         }
 
         private static Cover ToEntity(CoverDto cover)

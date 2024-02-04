@@ -1,6 +1,8 @@
 using Claims.Auditing;
+using Claims.Business.Abstractions;
+using Claims.Contracts;
+using EnsureThat;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
 
 namespace Claims.Controllers;
 
@@ -8,68 +10,67 @@ namespace Claims.Controllers;
 [Route("[controller]")]
 public class CoversController : ControllerBase
 {
-    private readonly ILogger<CoversController> _logger;
+    //private readonly ILogger<CoversController> _logger;
+    //private readonly Container _container;
     private readonly Auditer _auditer;
-    private readonly Container _container;
+    private readonly ICoversService _coversService;
 
-    public CoversController(CosmosClient cosmosClient, AuditContext auditContext, ILogger<CoversController> logger)
+    //public CoversController(CosmosClient cosmosClient, AuditContext auditContext, ILogger<CoversController> logger)
+    //{
+    //    _logger = logger;
+    //    _auditer = new Auditer(auditContext);
+    //    _container = cosmosClient?.GetContainer("ClaimDb", "Cover")
+    //                 ?? throw new ArgumentNullException(nameof(cosmosClient));
+    //}
+
+    public CoversController(ICoversService coversService, AuditContext auditContext)
     {
-        _logger = logger;
+        Ensure.That(coversService, nameof(coversService)).IsNotNull();
+
+        _coversService = coversService;
         _auditer = new Auditer(auditContext);
-        _container = cosmosClient?.GetContainer("ClaimDb", "Cover")
-                     ?? throw new ArgumentNullException(nameof(cosmosClient));
-    }
-    
-    [HttpPost]
-    public async Task<ActionResult> ComputePremiumAsync(DateOnly startDate, DateOnly endDate, CoverType coverType)
-    {
-        return Ok(ComputePremium(startDate, endDate, coverType));
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Cover>>> GetAsync()
+    public async Task<ActionResult<CoverDto[]>> GetAsync()
     {
-        var query = _container.GetItemQueryIterator<Cover>(new QueryDefinition("SELECT * FROM c"));
-        var results = new List<Cover>();
-        while (query.HasMoreResults)
-        {
-            var response = await query.ReadNextAsync();
+        var result = await _coversService.Get();
 
-            results.AddRange(response.ToList());
-        }
-
-        return Ok(results);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Cover>> GetAsync(string id)
+    public async Task<ActionResult<CoverDto>> GetAsync(string id)
     {
-        try
-        {
-            var response = await _container.ReadItemAsync<Cover>(id, new (id));
-            return Ok(response.Resource);
-        }
-        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        var result = await _coversService.Get(id);
+
+        if (result == null)
         {
             return NotFound();
         }
+
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateAsync(Cover cover)
+    public async Task<ActionResult<CoverDto>> CreateAsync(CoverDto cover)
     {
-        cover.Id = Guid.NewGuid().ToString();
-        cover.Premium = ComputePremium(cover.StartDate, cover.EndDate, cover.Type);
-        await _container.CreateItemAsync(cover, new PartitionKey(cover.Id));
+        var result = await _coversService.Create(cover);
+        var url = $"{nameof(CoversController)}/{{{result.Id}}}";
+
         _auditer.AuditCover(cover.Id, "POST");
-        return Ok(cover);
+
+        return Created(url, result);
     }
 
     [HttpDelete("{id}")]
-    public Task DeleteAsync(string id)
+    public async Task<ActionResult> DeleteAsync(string id)
     {
+        await _coversService.Delete(id);
+
         _auditer.AuditCover(id, "DELETE");
-        return _container.DeleteItemAsync<Cover>(id, new (id));
+
+        return NoContent();
     }
 
     private decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)

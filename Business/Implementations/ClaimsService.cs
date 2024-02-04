@@ -17,12 +17,18 @@ namespace Claims.Business.Implementations
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Create(ClaimDto claim)
+        public async Task<ClaimDto> Create(ClaimDto claim)
         {
             var repository = _unitOfWork.GetClaims();
             var entity = ToEntity(claim);
 
+            entity.Id = Guid.NewGuid().ToString();
+
             await repository.Create(entity).ConfigureAwait(false);
+
+            var result = ToDto(entity);
+
+            return result;
         }
 
         public async Task Delete(string id)

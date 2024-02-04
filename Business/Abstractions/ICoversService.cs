@@ -8,8 +8,10 @@ namespace Claims.Business.Abstractions
 
         Task<CoverDto> Get(string id);
 
-        Task Create(CoverDto claim);
+        Task<CoverDto> Create(CoverDto claim);
 
         Task Delete(string id);
+
+        decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType);
     }
 }

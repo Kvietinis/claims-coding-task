@@ -8,7 +8,7 @@ namespace Claims.Business.Abstractions
 
         Task<ClaimDto> Get(string id);
 
-        Task Create(ClaimDto claim);
+        Task<ClaimDto> Create(ClaimDto claim);
 
         Task Delete(string id);
     }

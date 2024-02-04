@@ -1,6 +1,8 @@
 using Claims.Auditing;
+using Claims.Business.Abstractions;
+using Claims.Contracts;
+using EnsureThat;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
 
 namespace Claims.Controllers
 {
@@ -9,92 +11,115 @@ namespace Claims.Controllers
     public class ClaimsController : ControllerBase
     {
         
-        private readonly ILogger<ClaimsController> _logger;
-        private readonly CosmosDbService _cosmosDbService;
+        //private readonly ILogger<ClaimsController> _logger;
+        //private readonly CosmosDbService _cosmosDbService;
         private readonly Auditer _auditer;
+        private readonly IClaimsService _claimsService;
 
-        public ClaimsController(ILogger<ClaimsController> logger, CosmosDbService cosmosDbService, AuditContext auditContext)
+        //public ClaimsController(ILogger<ClaimsController> logger, CosmosDbService cosmosDbService, AuditContext auditContext)
+        //{
+        //    _logger = logger;
+        //    _cosmosDbService = cosmosDbService;
+        //    _auditer = new Auditer(auditContext);
+        //}
+
+        public ClaimsController(IClaimsService claimsService, AuditContext auditContext)
         {
-            _logger = logger;
-            _cosmosDbService = cosmosDbService;
+            Ensure.That(claimsService, nameof(claimsService)).IsNotNull();
+
+            _claimsService = claimsService;
             _auditer = new Auditer(auditContext);
         }
 
         [HttpGet]
-        public Task<IEnumerable<Claim>> GetAsync()
+        public async Task<ActionResult<ClaimDto[]>> GetAsync()
         {
-            return _cosmosDbService.GetClaimsAsync();
-        }
+            var result = await _claimsService.Get();
 
-        [HttpPost]
-        public async Task<ActionResult> CreateAsync(Claim claim)
-        {
-            claim.Id = Guid.NewGuid().ToString();
-            await _cosmosDbService.AddItemAsync(claim);
-            _auditer.AuditClaim(claim.Id, "POST");
-            return Ok(claim);
-        }
-
-        [HttpDelete("{id}")]
-        public Task DeleteAsync(string id)
-        {
-            _auditer.AuditClaim(id, "DELETE");
-            return _cosmosDbService.DeleteItemAsync(id);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public Task<Claim> GetAsync(string id)
+        public async Task<ActionResult<ClaimDto>> GetAsync(string id)
         {
-            return _cosmosDbService.GetClaimAsync(id);
+            var result = await _claimsService.Get(id);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ClaimDto>> CreateAsync(ClaimDto claim)
+        {
+            var result = await _claimsService.Create(claim);
+            var url = $"{nameof(ClaimsController)}/{{{result.Id}}}";
+
+            _auditer.AuditClaim(claim.Id, "POST");
+
+            return Created(url, result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteAsync(string id)
+        {
+            await _claimsService.Delete(id);
+
+            _auditer.AuditClaim(id, "DELETE");
+
+            return NoContent();
         }
     }
 
-    public class CosmosDbService
-    {
-        private readonly Container _container;
+    //public class CosmosDbService
+    //{
+    //    private readonly Container _container;
 
-        public CosmosDbService(CosmosClient dbClient,
-            string databaseName,
-            string containerName)
-        {
-            if (dbClient == null) throw new ArgumentNullException(nameof(dbClient));
-            _container = dbClient.GetContainer(databaseName, containerName);
-        }
+    //    public CosmosDbService(CosmosClient dbClient,
+    //        string databaseName,
+    //        string containerName)
+    //    {
+    //        if (dbClient == null) throw new ArgumentNullException(nameof(dbClient));
+    //        _container = dbClient.GetContainer(databaseName, containerName);
+    //    }
 
-        public async Task<IEnumerable<Claim>> GetClaimsAsync()
-        {
-            var query = _container.GetItemQueryIterator<Claim>(new QueryDefinition("SELECT * FROM c"));
-            var results = new List<Claim>();
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
+    //    public async Task<IEnumerable<Claim>> GetClaimsAsync()
+    //    {
+    //        var query = _container.GetItemQueryIterator<Claim>(new QueryDefinition("SELECT * FROM c"));
+    //        var results = new List<Claim>();
+    //        while (query.HasMoreResults)
+    //        {
+    //            var response = await query.ReadNextAsync();
 
-                results.AddRange(response.ToList());
-            }
-            return results;
-        }
+    //            results.AddRange(response.ToList());
+    //        }
+    //        return results;
+    //    }
 
-        public async Task<Claim> GetClaimAsync(string id)
-        {
-            try
-            {
-                var response = await _container.ReadItemAsync<Claim>(id, new PartitionKey(id));
-                return response.Resource;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                return null;
-            }
-        }
+    //    public async Task<Claim> GetClaimAsync(string id)
+    //    {
+    //        try
+    //        {
+    //            var response = await _container.ReadItemAsync<Claim>(id, new PartitionKey(id));
+    //            return response.Resource;
+    //        }
+    //        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+    //        {
+    //            return null;
+    //        }
+    //    }
 
-        public Task AddItemAsync(Claim item)
-        {
-            return _container.CreateItemAsync(item, new PartitionKey(item.Id));
-        }
+    //    public Task AddItemAsync(Claim item)
+    //    {
+    //        return _container.CreateItemAsync(item, new PartitionKey(item.Id));
+    //    }
 
-        public Task DeleteItemAsync(string id)
-        {
-            return _container.DeleteItemAsync<Claim>(id, new PartitionKey(id));
-        }
-    }
+    //    public Task DeleteItemAsync(string id)
+    //    {
+    //        return _container.DeleteItemAsync<Claim>(id, new PartitionKey(id));
+    //    }
+    //}
 }
