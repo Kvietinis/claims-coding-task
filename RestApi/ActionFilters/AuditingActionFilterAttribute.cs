@@ -8,6 +8,9 @@ namespace Claims.ActionFilters
 {
     public class AuditingActionFilterAttribute : ActionFilterAttribute
     {
+        private const string Post = "POST";
+        private const string Delete = "DELETE";
+
         private readonly IAuditer _auditer;
 
         public AuditingActionFilterAttribute(IAuditer auditer)
@@ -26,27 +29,27 @@ namespace Claims.ActionFilters
 
             await next();
 
-            if (string.Equals(method, "post", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(method, Post, StringComparison.OrdinalIgnoreCase))
             {
                 var result = context.Result;
 
-                AuditPost(result, controllerName);
+                await AuditPost(result, controllerName);
 
                 return;
 
             }
 
-            if (string.Equals(method, "delete", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(method, Delete, StringComparison.OrdinalIgnoreCase))
             {
                 var path = context.HttpContext.Request.Path;
 
-                AuditDelete(path, controllerName);
+                await AuditDelete(path, controllerName);
 
                 return;
             }
         }
 
-        private void AuditPost(IActionResult result, string controller)
+        private async Task AuditPost(IActionResult result, string controller)
         {
             var actionResult = result as CreatedResult;
 
@@ -55,12 +58,10 @@ namespace Claims.ActionFilters
                 return;
             }
 
-            const string method = "POST";
-
             if (string.Equals(controller, "claims", StringComparison.OrdinalIgnoreCase))
             {
                 var claim = actionResult.Value as ClaimDto;
-                _auditer.AuditClaim(claim?.Id, method);
+                await _auditer.AuditClaim(claim?.Id, Post);
 
                 return;
             }
@@ -68,13 +69,13 @@ namespace Claims.ActionFilters
             if (string.Equals(controller, "covers", StringComparison.OrdinalIgnoreCase))
             {
                 var cover = actionResult.Value as CoverDto;
-                _auditer.AuditCover(cover?.Id, method);
+                await _auditer.AuditCover(cover?.Id, Post);
 
                 return;
             }
         }
 
-        private void AuditDelete(PathString path, string controller)
+        private async Task AuditDelete(PathString path, string controller)
         {
             if (!path.HasValue)
             {
@@ -88,18 +89,16 @@ namespace Claims.ActionFilters
                 return;
             }
 
-            const string method = "DELETE";
-
             if (string.Equals(controller, "claims", StringComparison.OrdinalIgnoreCase))
             {
-                _auditer.AuditClaim(id, method);
+                await _auditer.AuditClaim(id, Delete);
 
                 return;
             }
 
             if (string.Equals(controller, "covers", StringComparison.OrdinalIgnoreCase))
             {
-                _auditer.AuditCover(id, method);
+                await _auditer.AuditCover(id, Delete);
 
                 return;
             }

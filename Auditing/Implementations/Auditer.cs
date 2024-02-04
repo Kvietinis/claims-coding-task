@@ -14,7 +14,7 @@ namespace Claims.Auditing.Implementations
             _context = context;
         }
 
-        public void AuditClaim(string id, string httpRequestType)
+        public async Task AuditClaim(string id, string httpRequestType)
         {
             var claimAudit = new ClaimAudit()
             {
@@ -23,11 +23,11 @@ namespace Claims.Auditing.Implementations
                 ClaimId = id
             };
 
-            _context.Add(claimAudit);
-            _context.SaveChanges();
+            await _context.AddAsync(claimAudit).ConfigureAwait(false);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
-        public void AuditCover(string id, string httpRequestType)
+        public async Task AuditCover(string id, string httpRequestType)
         {
             var coverAudit = new CoverAudit()
             {
@@ -36,8 +36,8 @@ namespace Claims.Auditing.Implementations
                 CoverId = id
             };
 
-            _context.Add(coverAudit);
-            _context.SaveChanges();
+            await _context.AddAsync(coverAudit).ConfigureAwait(false);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }
