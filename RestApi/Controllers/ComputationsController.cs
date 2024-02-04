@@ -18,7 +18,7 @@ namespace Claims.Controllers
             _coversService = coversService;
         }
 
-        [HttpPost]
+        [HttpGet]
         public ActionResult<decimal> ComputePremiumAsync([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] CoverType coverType)
         {
             var result = _coversService.ComputePremium(startDate, endDate, coverType);
