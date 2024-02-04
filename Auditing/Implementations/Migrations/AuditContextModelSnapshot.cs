@@ -41,7 +41,7 @@ namespace Claims.Auditing.Implementations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ClaimAudits");
+                    b.ToTable("ClaimAudits", (string)null);
                 });
 
             modelBuilder.Entity("Claims.Auditing.Abstractions.CoverAudit", b =>
@@ -63,7 +63,7 @@ namespace Claims.Auditing.Implementations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CoverAudits");
+                    b.ToTable("CoverAudits", (string)null);
                 });
 #pragma warning restore 612, 618
         }

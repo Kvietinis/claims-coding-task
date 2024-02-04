@@ -19,7 +19,7 @@ namespace Claims.Controllers
         }
 
         [HttpPost]
-        public ActionResult<decimal> ComputePremiumAsync(DateOnly startDate, DateOnly endDate, CoverType coverType)
+        public ActionResult<decimal> ComputePremiumAsync([FromQuery] DateOnly startDate, [FromQuery] DateOnly endDate, [FromQuery] CoverType coverType)
         {
             var result = _coversService.ComputePremium(startDate, endDate, coverType);
 
