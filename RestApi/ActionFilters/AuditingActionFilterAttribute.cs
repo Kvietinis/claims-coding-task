@@ -32,6 +32,8 @@ namespace Claims.ActionFilters
 
                 AuditPost(result, controllerName);
 
+                return;
+
             }
 
             if (string.Equals(method, "delete", StringComparison.OrdinalIgnoreCase))
@@ -39,6 +41,8 @@ namespace Claims.ActionFilters
                 var path = context.HttpContext.Request.Path;
 
                 AuditDelete(path, controllerName);
+
+                return;
             }
         }
 
