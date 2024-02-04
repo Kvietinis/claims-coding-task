@@ -8,15 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services
-    .AddControllers(config =>
-    {
-        config.Filters.Add<AuditingActionFilter>();
-    })
+    .AddControllers()
     .AddJsonOptions(x =>
     {
         x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    }
-);
+    });
+
+builder.Services.AddScoped<AuditingActionFilterAttribute>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

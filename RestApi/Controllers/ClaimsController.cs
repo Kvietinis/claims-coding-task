@@ -1,4 +1,4 @@
-using Claims.Auditing.Abstractions;
+using Claims.ActionFilters;
 using Claims.Business.Abstractions;
 using Claims.Contracts;
 using EnsureThat;
@@ -10,16 +10,13 @@ namespace Claims.Controllers
     [Route("[controller]")]
     public class ClaimsController : ControllerBase
     {
-        private readonly IAuditer _auditer;
         private readonly IClaimsService _claimsService;
 
-        public ClaimsController(IClaimsService claimsService, IAuditer auditer)
+        public ClaimsController(IClaimsService claimsService)
         {
             Ensure.That(claimsService, nameof(claimsService)).IsNotNull();
-            Ensure.That(auditer, nameof(auditer)).IsNotNull();
 
             _claimsService = claimsService;
-            _auditer = auditer;
         }
 
         [HttpGet]
@@ -44,22 +41,20 @@ namespace Claims.Controllers
         }
 
         [HttpPost]
+        [ServiceFilter(typeof(AuditingActionFilterAttribute))]
         public async Task<ActionResult<ClaimDto>> CreateAsync(ClaimDto claim)
         {
             var result = await _claimsService.Create(claim);
             var url = $"{nameof(ClaimsController)}/{{{result.Id}}}";
 
-            _auditer.AuditClaim(claim.Id, "POST");
-
             return Created(url, result);
         }
 
         [HttpDelete("{id}")]
+        [ServiceFilter(typeof(AuditingActionFilterAttribute))]
         public async Task<ActionResult> DeleteAsync(string id)
         {
             await _claimsService.Delete(id);
-
-            _auditer.AuditClaim(id, "DELETE");
 
             return NoContent();
         }

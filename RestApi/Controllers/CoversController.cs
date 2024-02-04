@@ -1,4 +1,4 @@
-using Claims.Auditing.Abstractions;
+using Claims.ActionFilters;
 using Claims.Business.Abstractions;
 using Claims.Contracts;
 using EnsureThat;
@@ -10,16 +10,13 @@ namespace Claims.Controllers;
 [Route("[controller]")]
 public class CoversController : ControllerBase
 {
-    private readonly IAuditer _auditer;
     private readonly ICoversService _coversService;
 
-    public CoversController(ICoversService coversService, IAuditer auditer)
+    public CoversController(ICoversService coversService)
     {
         Ensure.That(coversService, nameof(coversService)).IsNotNull();
-        Ensure.That(auditer, nameof(auditer)).IsNotNull();
 
         _coversService = coversService;
-        _auditer = auditer;
     }
 
     [HttpGet]
@@ -44,22 +41,20 @@ public class CoversController : ControllerBase
     }
 
     [HttpPost]
+    [ServiceFilter(typeof(AuditingActionFilterAttribute))]
     public async Task<ActionResult<CoverDto>> CreateAsync(CoverDto cover)
     {
         var result = await _coversService.Create(cover);
         var url = $"{nameof(CoversController)}/{{{result.Id}}}";
 
-        _auditer.AuditCover(cover.Id, "POST");
-
         return Created(url, result);
     }
 
     [HttpDelete("{id}")]
+    [ServiceFilter(typeof(AuditingActionFilterAttribute))]
     public async Task<ActionResult> DeleteAsync(string id)
     {
         await _coversService.Delete(id);
-
-        _auditer.AuditCover(id, "DELETE");
 
         return NoContent();
     }
