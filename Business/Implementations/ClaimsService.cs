@@ -25,6 +25,7 @@ namespace Claims.Business.Implementations
             entity.Id = Guid.NewGuid().ToString();
 
             await repository.Create(entity).ConfigureAwait(false);
+            await _unitOfWork.Commit().ConfigureAwait(false);
 
             var result = ToDto(entity);
 
@@ -36,6 +37,7 @@ namespace Claims.Business.Implementations
             var repository = _unitOfWork.GetClaims();
 
             await repository.Delete(id).ConfigureAwait(false);
+            await _unitOfWork.Commit().ConfigureAwait(false);
         }
 
         public async Task<ClaimDto[]> Get()

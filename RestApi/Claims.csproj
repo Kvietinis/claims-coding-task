@@ -16,6 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Auditing\Abstractions\Claims.Auditing.Abstractions.csproj" />
+    <ProjectReference Include="..\Auditing\IoC\Claims.Auditing.IoC.csproj" />
     <ProjectReference Include="..\Business\Abstractions\Claims.Business.Abstractions.csproj" />
     <ProjectReference Include="..\Business\IoC\Claims.Business.IoC.csproj" />
     <ProjectReference Include="..\Contracts\Claims.Contracts.csproj" />

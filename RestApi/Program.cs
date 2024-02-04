@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Claims.Auditing;
+using Claims.Auditing.IoC;
 using Claims.Business.IoC;
 using Claims.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ builder.Services.Configure<CosmosDbConnectionSettings>(builder.Configuration.Get
 builder.Services.AddDbContext<AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.ConfigureBusinessServices(builder.Configuration);
+builder.Services.ConfigureAuditingServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -38,11 +40,11 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
-    context.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
+//    context.Database.Migrate();
+//}
 
 app.Run();
 

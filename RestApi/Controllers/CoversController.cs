@@ -1,4 +1,4 @@
-using Claims.Auditing;
+using Claims.Auditing.Abstractions;
 using Claims.Business.Abstractions;
 using Claims.Contracts;
 using EnsureThat;
@@ -12,7 +12,7 @@ public class CoversController : ControllerBase
 {
     //private readonly ILogger<CoversController> _logger;
     //private readonly Container _container;
-    private readonly Auditer _auditer;
+    private readonly IAuditer _auditer;
     private readonly ICoversService _coversService;
 
     //public CoversController(CosmosClient cosmosClient, AuditContext auditContext, ILogger<CoversController> logger)
@@ -23,12 +23,13 @@ public class CoversController : ControllerBase
     //                 ?? throw new ArgumentNullException(nameof(cosmosClient));
     //}
 
-    public CoversController(ICoversService coversService, AuditContext auditContext)
+    public CoversController(ICoversService coversService, IAuditer auditer)
     {
         Ensure.That(coversService, nameof(coversService)).IsNotNull();
+        Ensure.That(auditer, nameof(auditer)).IsNotNull();
 
         _coversService = coversService;
-        _auditer = new Auditer(auditContext);
+        _auditer = auditer;
     }
 
     [HttpGet]
@@ -73,37 +74,37 @@ public class CoversController : ControllerBase
         return NoContent();
     }
 
-    private decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)
-    {
-        var multiplier = 1.3m;
-        if (coverType == CoverType.Yacht)
-        {
-            multiplier = 1.1m;
-        }
+    //private decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)
+    //{
+    //    var multiplier = 1.3m;
+    //    if (coverType == CoverType.Yacht)
+    //    {
+    //        multiplier = 1.1m;
+    //    }
 
-        if (coverType == CoverType.PassengerShip)
-        {
-            multiplier = 1.2m;
-        }
+    //    if (coverType == CoverType.PassengerShip)
+    //    {
+    //        multiplier = 1.2m;
+    //    }
 
-        if (coverType == CoverType.Tanker)
-        {
-            multiplier = 1.5m;
-        }
+    //    if (coverType == CoverType.Tanker)
+    //    {
+    //        multiplier = 1.5m;
+    //    }
 
-        var premiumPerDay = 1250 * multiplier;
-        var insuranceLength = endDate.DayNumber - startDate.DayNumber;
-        var totalPremium = 0m;
+    //    var premiumPerDay = 1250 * multiplier;
+    //    var insuranceLength = endDate.DayNumber - startDate.DayNumber;
+    //    var totalPremium = 0m;
 
-        for (var i = 0; i < insuranceLength; i++)
-        {
-            if (i < 30) totalPremium += premiumPerDay;
-            if (i < 180 && coverType == CoverType.Yacht) totalPremium += premiumPerDay - premiumPerDay * 0.05m;
-            else if (i < 180) totalPremium += premiumPerDay - premiumPerDay * 0.02m;
-            if (i < 365 && coverType != CoverType.Yacht) totalPremium += premiumPerDay - premiumPerDay * 0.03m;
-            else if (i < 365) totalPremium += premiumPerDay - premiumPerDay * 0.08m;
-        }
+    //    for (var i = 0; i < insuranceLength; i++)
+    //    {
+    //        if (i < 30) totalPremium += premiumPerDay;
+    //        if (i < 180 && coverType == CoverType.Yacht) totalPremium += premiumPerDay - premiumPerDay * 0.05m;
+    //        else if (i < 180) totalPremium += premiumPerDay - premiumPerDay * 0.02m;
+    //        if (i < 365 && coverType != CoverType.Yacht) totalPremium += premiumPerDay - premiumPerDay * 0.03m;
+    //        else if (i < 365) totalPremium += premiumPerDay - premiumPerDay * 0.08m;
+    //    }
 
-        return totalPremium;
-    }
+    //    return totalPremium;
+    //}
 }

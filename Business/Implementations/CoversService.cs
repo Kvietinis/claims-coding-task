@@ -26,6 +26,7 @@ namespace Claims.Business.Implementations
             entity.Premium = ComputePremium(entity.StartDate, entity.EndDate, entity.Type);
 
             await repository.Create(entity).ConfigureAwait(false);
+            await _unitOfWork.Commit().ConfigureAwait(false);
 
             var result = ToDto(entity);
 
@@ -37,6 +38,7 @@ namespace Claims.Business.Implementations
             var repository = _unitOfWork.GetCovers();
 
             await repository.Delete(id).ConfigureAwait(false);
+            await _unitOfWork.Commit().ConfigureAwait(false);
         }
 
         public async Task<CoverDto[]> Get()

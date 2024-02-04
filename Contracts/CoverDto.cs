@@ -1,20 +1,22 @@
-﻿namespace Claims.Contracts
+﻿using Newtonsoft.Json;
+
+namespace Claims.Contracts
 {
     public class CoverDto
     {
-        //[JsonProperty(PropertyName = "id")]
+        [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
-        //[JsonProperty(PropertyName = "startDate")]
+        [JsonProperty(PropertyName = "startDate")]
         public DateOnly StartDate { get; set; }
 
-        //[JsonProperty(PropertyName = "endDate")]
+        [JsonProperty(PropertyName = "endDate")]
         public DateOnly EndDate { get; set; }
 
-        //[JsonProperty(PropertyName = "claimType")]
+        [JsonProperty(PropertyName = "claimType")]
         public CoverType Type { get; set; }
 
-        //[JsonProperty(PropertyName = "premium")]
+        [JsonProperty(PropertyName = "premium")]
         public decimal Premium { get; set; }
     }
 }

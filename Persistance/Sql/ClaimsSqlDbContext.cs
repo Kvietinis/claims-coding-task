@@ -13,6 +13,15 @@ namespace Claims.Persistance.Sql
 
         public virtual DbSet<Cover> Covers { get; set; }
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+        {
+            base.ConfigureConventions(builder);
+
+            builder.Properties<DateOnly>()
+                .HaveConversion<DateOnlyConverter>()
+                .HaveColumnType("date");
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Claim>(e =>

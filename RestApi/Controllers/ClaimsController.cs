@@ -1,4 +1,4 @@
-using Claims.Auditing;
+using Claims.Auditing.Abstractions;
 using Claims.Business.Abstractions;
 using Claims.Contracts;
 using EnsureThat;
@@ -13,7 +13,7 @@ namespace Claims.Controllers
         
         //private readonly ILogger<ClaimsController> _logger;
         //private readonly CosmosDbService _cosmosDbService;
-        private readonly Auditer _auditer;
+        private readonly IAuditer _auditer;
         private readonly IClaimsService _claimsService;
 
         //public ClaimsController(ILogger<ClaimsController> logger, CosmosDbService cosmosDbService, AuditContext auditContext)
@@ -23,12 +23,13 @@ namespace Claims.Controllers
         //    _auditer = new Auditer(auditContext);
         //}
 
-        public ClaimsController(IClaimsService claimsService, AuditContext auditContext)
+        public ClaimsController(IClaimsService claimsService, IAuditer auditer)
         {
             Ensure.That(claimsService, nameof(claimsService)).IsNotNull();
+            Ensure.That(auditer, nameof(auditer)).IsNotNull();
 
             _claimsService = claimsService;
-            _auditer = new Auditer(auditContext);
+            _auditer = auditer;
         }
 
         [HttpGet]
