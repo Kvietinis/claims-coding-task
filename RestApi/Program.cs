@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Claims.ActionFilters;
 using Claims.Auditing.IoC;
 using Claims.Business.IoC;
 using Claims.Contracts;
@@ -6,7 +7,12 @@ using Claims.Contracts;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(x =>
+builder.Services
+    .AddControllers(config =>
+    {
+        config.Filters.Add<AuditingActionFilter>();
+    })
+    .AddJsonOptions(x =>
     {
         x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     }
