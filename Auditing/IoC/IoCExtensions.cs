@@ -13,6 +13,9 @@ namespace Claims.Auditing.IoC
             services.AddDbContext<AuditContext>(options => options.UseSqlServer(configuration["ConnectionStrings:DefaultConnection"]));
             services.AddTransient<IAuditer, Auditer>();
 
+            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+
+            services.AddHostedService<QueueHostedService>();
             services.AddHostedService<SqlAuditingMigrationService>();
 
             return services;

@@ -1,17 +1,21 @@
 ﻿using Claims.Auditing.Abstractions;
 using EnsureThat;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Claims.Auditing.Implementations
 {
     public class Auditer : IAuditer
     {
-        private readonly AuditContext _context;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IBackgroundTaskQueue _taskQueue;
 
-        public Auditer(AuditContext context)
+        public Auditer(IServiceScopeFactory scopeFactory, IBackgroundTaskQueue taskQueue)
         {
-            Ensure.That(context, nameof(context)).IsNotNull();
+            Ensure.That(scopeFactory, nameof(scopeFactory)).IsNotNull();
+            Ensure.That(taskQueue, nameof(taskQueue)).IsNotNull();
 
-            _context = context;
+            _scopeFactory = scopeFactory;
+            _taskQueue = taskQueue;
         }
 
         public async Task AuditClaim(string id, string httpRequestType)
@@ -23,8 +27,15 @@ namespace Claims.Auditing.Implementations
                 ClaimId = id
             };
 
-            await _context.AddAsync(claimAudit).ConfigureAwait(false);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
+            await _taskQueue.Queue(async () =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                using var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
+
+                await context.AddAsync(claimAudit).ConfigureAwait(false);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            })
+            .ConfigureAwait(false);
         }
 
         public async Task AuditCover(string id, string httpRequestType)
@@ -36,8 +47,15 @@ namespace Claims.Auditing.Implementations
                 CoverId = id
             };
 
-            await _context.AddAsync(coverAudit).ConfigureAwait(false);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
+            await _taskQueue.Queue(async () =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                using var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
+
+                await context.AddAsync(coverAudit).ConfigureAwait(false);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            })
+            .ConfigureAwait(false);
         }
     }
 }
