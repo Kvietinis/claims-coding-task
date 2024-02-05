@@ -7,15 +7,12 @@ namespace Claims.Auditing.Implementations
     public class Auditer : IAuditer
     {
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IBackgroundTaskQueue _taskQueue;
 
-        public Auditer(IServiceScopeFactory scopeFactory, IBackgroundTaskQueue taskQueue)
+        public Auditer(IServiceScopeFactory scopeFactory)
         {
             Ensure.That(scopeFactory, nameof(scopeFactory)).IsNotNull();
-            Ensure.That(taskQueue, nameof(taskQueue)).IsNotNull();
 
             _scopeFactory = scopeFactory;
-            _taskQueue = taskQueue;
         }
 
         public async Task AuditClaim(string id, string httpRequestType)
@@ -27,15 +24,11 @@ namespace Claims.Auditing.Implementations
                 ClaimId = id
             };
 
-            await _taskQueue.Queue(async () =>
-            {
-                using var scope = _scopeFactory.CreateScope();
-                using var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
+            using var scope = _scopeFactory.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
 
-                await context.AddAsync(claimAudit).ConfigureAwait(false);
-                await context.SaveChangesAsync().ConfigureAwait(false);
-            })
-            .ConfigureAwait(false);
+            await context.AddAsync(claimAudit).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task AuditCover(string id, string httpRequestType)
@@ -47,15 +40,11 @@ namespace Claims.Auditing.Implementations
                 CoverId = id
             };
 
-            await _taskQueue.Queue(async () =>
-            {
-                using var scope = _scopeFactory.CreateScope();
-                using var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
+            using var scope = _scopeFactory.CreateScope();
+            using var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
 
-                await context.AddAsync(coverAudit).ConfigureAwait(false);
-                await context.SaveChangesAsync().ConfigureAwait(false);
-            })
-            .ConfigureAwait(false);
+            await context.AddAsync(coverAudit).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }
