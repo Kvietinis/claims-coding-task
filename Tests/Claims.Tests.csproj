@@ -16,4 +16,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RestApi\Claims.csproj" />
+  </ItemGroup>
+
 </Project>
